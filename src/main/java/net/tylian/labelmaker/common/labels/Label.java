@@ -15,28 +15,34 @@ import org.lwjgl.opengl.GL11;
 /**
  * Created by Tylian on 4/15/2017.
  */
-public abstract class Label {
-    public String text;
+public class Label {
+    public Vec3d offset;
     public Vec3d rotation;
+    public String text;
+    public float scale = 1.0f;
 
-    Label(Vec3d rotation, String text) {
+    public Label(Vec3d offset, Vec3d rotation, String text) {
+        this.offset = offset;
         this.text = text;
         this.rotation = rotation;
     }
 
-    public abstract Vec3d getWorldPosition();
+    public Vec3d getParentPosition() { return new Vec3d(0.0d, 0.0d, 0.0d); };
+    public Vec3d getParentRotation() { return new Vec3d(0.0d, 0.0d, 0.0d); };
 
-    @SideOnly(Side.CLIENT  )
+    @SideOnly(Side.CLIENT)
     public boolean shouldRender() {
         EntityPlayerSP player = Minecraft.getMinecraft().player;
-        Vec3d pos = this.getWorldPosition();
-        return (player.getDistanceSq(pos.xCoord, pos.yCoord, pos.zCoord) < 64.0d);
+        Vec3d pos = this.getParentPosition().add(offset);
+        return (player.getDistanceSq(pos.xCoord, pos.yCoord, pos.zCoord) < 4096.0d);
     }
 
     @SideOnly(Side.CLIENT)
-    public void render(int partialTicks) {
+    public void render(float partialTicks) {
             GlStateManager.pushMatrix();
             GlStateManager.disableCull();
+
+            Vec3d rot = this.getParentRotation().add(rotation);
 
             FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
             EntityPlayerSP player = Minecraft.getMinecraft().player;
@@ -52,14 +58,14 @@ public abstract class Label {
 
             GlStateManager.depthMask(false);
 
-            Vec3d pos = this.getWorldPosition();
+            Vec3d pos = this.getParentPosition().add(offset);
 
             GlStateManager.translate(pos.xCoord, pos.yCoord, pos.zCoord);
-            GlStateManager.rotate((float)this.rotation.xCoord * 360.0f, 1.0f, 0.0f, 0.0f);
-            GlStateManager.rotate((float)this.rotation.yCoord * 360.0f, 0.0f, 1.0f, 0.0f);
-            GlStateManager.rotate((float)this.rotation.zCoord * 360.0f, 0.0f, 0.0f, 1.0f);
+            GlStateManager.rotate((float)rot.xCoord * 360.0f, 1.0f, 0.0f, 0.0f);
+            GlStateManager.rotate((float)rot.yCoord * 360.0f, 0.0f, 1.0f, 0.0f);
+            GlStateManager.rotate((float)rot.zCoord * 360.0f, 0.0f, 0.0f, 1.0f);
             GlStateManager.glNormal3f(0.0F, 1.0F, 0.0F);
-            GlStateManager.scale(-0.025F, -0.025F, 0.025F);
+            GlStateManager.scale(-0.0625f * this.scale, -0.0625f * this.scale, 0.0625f * this.scale);
 
             // Center everything
             GlStateManager.translate(-textWidth / 2 - 1, -5.5f, -0.001f);

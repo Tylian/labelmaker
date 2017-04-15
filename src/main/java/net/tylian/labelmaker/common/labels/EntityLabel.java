@@ -11,13 +11,17 @@ public class EntityLabel extends Label {
     private Entity parent;
 
     public EntityLabel(Entity entity, Vec3d offset, Vec3d rotation, String text) {
-        super(rotation, text);
-
-        this.parent = entity;
-        this.offset = offset;
+        super(offset, rotation, text);
     }
 
-    public Vec3d getWorldPosition() {
-        return this.parent.getPositionVector().add(offset);
+    @Override
+    public Vec3d getParentPosition() {
+        return this.parent.getPositionVector();
     }
+
+    @Override
+    public Vec3d getParentRotation() {
+        return new Vec3d(this.parent.rotationPitch, this.parent.rotationYaw, 0.0d);
+    }
+
 }
