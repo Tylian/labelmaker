@@ -7,19 +7,22 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.tylian.labelmaker.common.Utils;
 import org.lwjgl.opengl.GL11;
 
 /**
  * Created by Tylian on 4/15/2017.
  */
 public class Label {
-    public Vec3d offset;
-    public Vec3d rotation;
-    public String text;
-    public float scale = 1.0f;
+    private Vec3d offset;
+    private Vec3d rotation;
+    private String text;
+    private float scale = 1.0f;
 
     public Label(Vec3d offset, Vec3d rotation, String text) {
         this.offset = offset;
@@ -27,22 +30,48 @@ public class Label {
         this.rotation = rotation;
     }
 
-    public Vec3d getParentPosition() { return new Vec3d(0.0d, 0.0d, 0.0d); };
-    public Vec3d getParentRotation() { return new Vec3d(0.0d, 0.0d, 0.0d); };
+    public Label(NBTTagCompound nbt) {
+        this.deserializeNBT(nbt);
+    }
+
+
+    public Vec3d getParentPosition(World worldIn) { return Vec3d.ZERO; }
+    public Vec3d getParentRotation(World worldIn) { return Vec3d.ZERO; }
+
+    protected String getType() {
+        return "label";
+    }
+
+    public NBTTagCompound serializeNBT() {
+        NBTTagCompound nbt = new NBTTagCompound();
+        nbt.setString("Type", this.getType());
+        nbt.setTag("Offset", Utils.nbtWriteVec3d(this.offset));
+        nbt.setTag("Rotation", Utils.nbtWriteVec3d(this.rotation));
+        nbt.setString("Text", this.text);
+        nbt.setFloat("Scale", this.scale);
+        return nbt;
+    }
+
+    public void deserializeNBT(NBTTagCompound nbt) {
+        this.offset = Utils.nbtReadVec3d(nbt.getCompoundTag("Offset"));
+        this.rotation = Utils.nbtReadVec3d(nbt.getCompoundTag("Rotation"));
+        this.text = nbt.getString("Text");
+        this.scale = nbt.getFloat("Scale");
+    }
 
     @SideOnly(Side.CLIENT)
-    public boolean shouldRender() {
+    public boolean shouldRender(World worldIn) {
         EntityPlayerSP player = Minecraft.getMinecraft().player;
-        Vec3d pos = this.getParentPosition().add(offset);
+        Vec3d pos = this.getParentPosition(worldIn).add(offset);
         return (player.getDistanceSq(pos.xCoord, pos.yCoord, pos.zCoord) < 4096.0d);
     }
 
     @SideOnly(Side.CLIENT)
-    public void render(float partialTicks) {
+    public void render(World worldIn, float partialTicks) {
             GlStateManager.pushMatrix();
             GlStateManager.disableCull();
 
-            Vec3d rot = this.getParentRotation().add(rotation);
+            Vec3d rot = this.getParentRotation(worldIn).add(rotation);
 
             FontRenderer fontRenderer = Minecraft.getMinecraft().fontRendererObj;
             EntityPlayerSP player = Minecraft.getMinecraft().player;
@@ -58,7 +87,7 @@ public class Label {
 
             GlStateManager.depthMask(false);
 
-            Vec3d pos = this.getParentPosition().add(offset);
+            Vec3d pos = this.getParentPosition(worldIn).add(offset);
 
             GlStateManager.translate(pos.xCoord, pos.yCoord, pos.zCoord);
             GlStateManager.rotate((float)rot.xCoord * 360.0f, 1.0f, 0.0f, 0.0f);

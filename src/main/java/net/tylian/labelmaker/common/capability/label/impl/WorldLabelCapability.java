@@ -9,10 +9,10 @@ import net.tylian.labelmaker.common.labels.Label;
  * Created by Tylian on 4/15/2017.
  */
 public class WorldLabelCapability extends DefaultLabelCapability {
-    private World parent;
+    private World world;
 
     public WorldLabelCapability(World worldIn) {
-        this.parent = worldIn;
+        this.world = worldIn;
     }
 
     public Label create(Vec3d offset, Vec3d rotation, String text) {

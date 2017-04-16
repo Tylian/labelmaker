@@ -1,7 +1,9 @@
 package net.tylian.labelmaker.common.capability.label;
 
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.common.util.Constants;
 import net.tylian.labelmaker.common.labels.Label;
 
 import java.util.LinkedList;
@@ -28,14 +30,28 @@ public class DefaultLabelCapability implements ILabelCapability {
         return new Label(offset, rotation, text);
     }
 
+    public Label create(NBTTagCompound nbt) {
+        return new Label(nbt);
+    }
+
     @Override
     public NBTTagCompound serializeNBT() {
+        NBTTagCompound nbt = new NBTTagCompound();
+        NBTTagList list = new NBTTagList();
+        for(Label label : labels) {
+            list.appendTag(label.serializeNBT());
+        }
+        nbt.setTag("Labels", list);
+
         return new NBTTagCompound();
     }
 
     @Override
     public void deserializeNBT(NBTTagCompound nbt) {
-        //
+        NBTTagList items = nbt.getTagList("Labels", Constants.NBT.TAG_COMPOUND); // 10 = COMPOUND
+        for(int i = 0; i < items.tagCount(); i++) {
+            NBTTagCompound item = items.getCompoundTagAt(i);
+            this.labels.add(this.create(item));
+        }
     }
-
 }
